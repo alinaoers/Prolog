@@ -11,19 +11,21 @@ add_edge(X, Y) :-
 
 consed( Tail, Head, [Head|Tail]).
 
-bfs(Goal, [Visited|Rest], Path) :-            
+bfs(Goal, [Visited|Rest], Path) :-           
     Visited = [Start|_],         
     Start \== Goal,
     findall(X, (connected(Start, X), \+ member(X, Visited)), [T|Extend]),
     maplist( consed(Visited), [T|Extend], VisitedExtended),  
     append( Rest, VisitedExtended, UpdatedQueue), 
     (bfs( Goal, UpdatedQueue, Path );
-    bfs2( Goal, UpdatedQueue, Path )).
+    removehead(UpdatedQueue, Tail), 
+    bfs(Goal, Tail, Path);
+    processqueue( Goal, UpdatedQueue, Path )).
 
-bfs2(Goal, [X|Tail], Path):-
-    (equalset(X, [Goal|Visited]),
+processqueue(Goal, [X|Tail], Path):-
+    (equalset(X, [Goal|_]),
     reverse(X, Path); 
-    bfs2(Goal, Tail, Path)).
+    processqueue(Goal, Tail, Path)).
 
 equalset(sl,sl).
 equalset([A|L],L1):-del(A,L1,L2), equalset(L,L2).
@@ -33,16 +35,18 @@ del(symbol,sl,sl).
 del(A,[A|L],L):- !.
 del(A,[A|L],[A|L1]):- del(A,L,L1).
 
-breadth_first( Start, Goal, Path):-
+removehead([_|Tail], Tail).
+
+breadthfirst( Start, Goal, Path):-
     bfs( Goal, [[Start]], Path).
 
 main :- 
-    write('Input all vertexes: '),
     retractall(connected(X, Y)),
+    write('Input all vertexes: '),
     input_edge,
     write('Input start vertex: '),
     read(X),
     write('Input finish vertex: '),
-    read(Y),
-    breadth_first(X, Y, Path), 
+    read(Y), 
+    breadthfirst(X, Y, Path), 
     write('Path: '), write(Path), nl.
